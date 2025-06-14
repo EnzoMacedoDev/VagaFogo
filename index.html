@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
+    <title>Vagafogo - Experiências Gastronômicas e Aventuras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#A0522D',
+                        secondary: '#8AAE5F',
+                        accent: '#DAA520',
+                        dark: '#2D1E0F',
+                        light: '#F5F5F5'
+                    },
+                    fontFamily: {
+                        heading: ['Playfair Display', 'serif'],
+                        body: ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --primary: #A0522D;
+            --secondary: #8AAE5F;
+            --accent: #DAA520;
+            --dark: #2D1E0F;
+            --light: #F5F5F5;
+        }
+
+        /* Otimizações de performance para animações */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Scroll reveal otimizado com will-change */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translate3d(0, 30px, 0);
+            transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                        transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: opacity, transform;
+        }
+
+        .scroll-reveal.show {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+
+        /* Otimizações para hover effects */
+        .booking-step {
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+
+        .booking-step:hover {
+            transform: translate3d(0, -5px, 0);
+        }
+
+        .menu-card {
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+
+        .menu-card:hover {
+            transform: translate3d(0, -10px, 0);
+        }
+
+        /* Focus states otimizados */
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #8AAE5F;
+            outline-offset: 2px;
+        }
+
+        /* Animação bounce otimizada */
+        .animate-bounce {
+            animation: optimized-bounce 1.5s infinite;
+            will-change: transform;
+        }
+
+        @keyframes optimized-bounce {
+            0%, 100% {
+                transform: translate3d(-50%, 0, 0);
+                opacity: 1;
+            }
+            50% {
+                transform: translate3d(-50%, -10px, 0);
+                opacity: 0.7;
+            }
+        }
+
+        /* Pulse otimizado */
+        .pulse {
+            animation: optimized-pulse 2s infinite;
+            will-change: box-shadow;
+        }
+
+        @keyframes optimized-pulse {
+            0% { 
+                box-shadow: 0 0 0 0 rgba(218, 165, 32, 0.7); 
+            }
+            70% { 
+                box-shadow: 0 0 0 10px rgba(218, 165, 32, 0); 
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(218, 165, 32, 0); 
+            }
+        }
+
+        /* Carousel otimizado */
+        .carousel {
+            overflow: hidden;
+            position: relative;
+            border-radius: 0.5rem;
+            contain: layout style paint;
+        }
+
+        .carousel-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
+            will-change: opacity;
+        }
+
+        .carousel-inner.active {
+            opacity: 1;
+        }
+
+        /* Lazy loading placeholder */
+        .lazy-image {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .day-selected {
+            background-color: #A0522D;
+            color: white;
+            font-weight: bold;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform, background-color;
+        }
+
+        .carousel-dot.active {
+            background: white;
+            transform: scale(1.2);
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            border-radius: 30px;
+            background: #F5F5F5;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: background-color, color;
+        }
+
+        .tab-button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-error {
+            border: 2px solid #e53e3e;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+
+        /* Otimizações para mobile */
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 2rem !important;
+                margin-bottom: 1rem !important;
+            }
+            .mobile-px {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .mobile-py {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            .mobile-text {
+                font-size: 0.9rem;
+            }
+            .mobile-text-lg {
+                font-size: 1rem;
+            }
+            .mobile-flex-col {
+                flex-direction: column;
+            }
+            .mobile-w-full {
+                width: 100% !important;
+            }
+
+            .carousel-nav {
+                bottom: 5px;
+            }
+
+            .carousel-dot {
+                width: 8px;
+                height: 8px;
+            }
+        }
+
+        /* Reduzir motion para usuários que preferem */
+        @media (prefers-reduced-motion: reduce) {
+            .scroll-reveal,
+            .booking-step,
+            .menu-card,
+            .animate-bounce,
+            .pulse,
+            .carousel-inner,
+            .carousel-dot,
+            .tab-button {
+                transition: none;
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body class="font-body text-dark bg-stone-50">
+    <!-- Header -->
+    <header class="fixed w-full bg-white shadow-md z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="images/logo/logo.jpg" alt="Logo Vagafogo" class="w-16 h-12 rounded-xl object-cover lazy-load" loading="lazy">
+                <span class="ml-3 font-heading font-bold text-primary text-xl">VAGAFOGO</span>
+            </div>
+
+            <!-- Mobile menu button -->
+            <div class="lg:hidden">
+                <button id="menu-toggle" class="text-primary text-2xl" aria-label="Abrir menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Desktop menu -->
+            <nav class="hidden lg:flex space-x-4 lg:space-x-8">
+                <a href="#inicio" class="text-primary font-medium hover:text-accent transition">Início</a>
+                <a href="#brunch" class="text-primary font-medium hover:text-accent transition">Brunch</a>
+                <a href="#trilha" class="text-primary font-medium hover:text-accent transition">Trilha</a>
+                <a href="#educacao" class="text-primary font-medium hover:text-accent transition">Educação</a>
+                <a href="#reservas" class="text-primary font-medium hover:text-accent transition">Reservas</a>
+            </nav>
+
+            <a href="#reservas" class="hidden md:block bg-primary text-white px-6 py-2 rounded-full font-medium hover:bg-secondary transform hover:scale-105 transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                Reservar Agora
+            </a>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-white shadow-lg py-4">
+            <div class="flex flex-col space-y-3 px-4">
+                <a href="#inicio" class="py-2 border-b border-gray-100">Início</a>
+                <a href="#brunch" class="py-2 border-b border-gray-100">Brunch</a>
+                <a href="#trilha" class="py-2 border-b border-gray-100">Trilha</a>
+                <a href="#educacao" class="py-2 border-b border-gray-100">Aventura</a>
+                <a href="#reservas" class="py-2">Reservas</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="min-h-screen flex items-center pt-20 md:pt-0 mobile-px" style="background: linear-gradient(rgba(45, 30, 15, 0.7), rgba(45, 30, 15, 0.7)), url('images/hero/hero-1.jpg') center/cover;">
+        <div class="container mx-auto px-4 py-16 md:py-0">
+            <div class="max-w-2xl mx-auto text-center px-4">
+                <h1 class="font-heading text-3xl sm:text-4xl lg:text-6xl hero-title font-bold text-white mb-4 sm:mb-6 leading-tight">
+                    Descubra o Santuário Vagafogo
+                </h1>
+                <p class="text-base sm:text-xl text-white mb-6 sm:mb-8 scroll-reveal">
+                    Uma experiência gastronômica única, aliada às maravilhas do cerrado brasileiro. Sabores que emocionam com uma natureza que encanta.
+                </p>
+                <div class="flex flex-wrap gap-4 justify-center scroll-reveal">
+                    <a href="#reservas" class="bg-accent text-white font-medium px-8 py-4 rounded-full hover:bg-opacity-90 transform hover:scale-105 transition duration-300 pulse focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        <i class="fas fa-calendar-check mr-2"></i> Faça sua reserva
+                    </a>
+                    <a href="#brunch" class="border-2 border-white text-white font-medium px-8 py-4 rounded-full hover:bg-white hover:text-primary transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-white">
+                        <i class="fas fa-info-circle mr-2"></i> Saiba mais
+                    </a>
+                </div>
+            </div>
+            <!-- Scroll down arrow -->
+            <div class="fixed bottom-8 left-0 right-0 text-center animate-bounce z-50">
+                <a href="#brunch" id="scroll-down-arrow" class="inline-block text-white hover:text-accent transition-transform duration-300" aria-label="Ir para próxima seção" data-current-section="inicio">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <span class="text-secondary font-semibold">POR QUE ESCOLHER O VAGAFOGO</span>
+                <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mt-2">
+                    Uma Experiência que Transforma
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                <div class="bg-white rounded-xl p-4 sm:p-6 lg:p-8 shadow-lg text-center border-t-4 border-accent scroll-reveal">
+                    <div class="w-16 h-16 rounded-full bg-secondary bg-opacity-20 flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-utensils text-2xl text-secondary"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-primary mb-3">Brunch Gastronômico - R$105,00</h3>
+                    <p class="text-gray-600">45 itens e 14 harmonizações únicas com derivados do leite local e frutas do cerrado em manejo sustentável.</p>
+                </div>
+
+                <div class="bg-white rounded-xl p-8 shadow-lg text-center border-t-4 border-accent scroll-reveal">
+                    <div class="w-16 h-16 rounded-full bg-secondary bg-opacity-20 flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-tree text-2xl text-secondary"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-primary mb-3">Trilha Mãe da Floresta - R$30,00</h3>
+                    <p class="text-gray-600">1.530m por mata ciliar primária margeando o rio Vagafogo, com 182 espécies de pássaros catalogadas.</p>
+                </div>
+
+                <div class="bg-white rounded-xl p-8 shadow-lg text-center border-t-4 border-accent scroll-reveal">
+                    <div class="w-16 h-16 rounded-full bg-secondary bg-opacity-20 flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-graduation-cap text-2xl text-secondary"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-primary mb-3">Educação Ambiental - Agendamento via WhatsApp</h3>
+                    <p class="text-gray-600">Projeto voltado para escolas, faculdades e grupos específicos, promovendo compreensão sobre flora, fauna e sustentabilidade.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Brunch Section -->
+    <section id="brunch" class="py-16 md:py-24" style="background: linear-gradient(rgba(45, 30, 15, 0.7), rgba(45, 30, 15, 0.7)), url('images/hero/hero-2.jpg') center/cover;">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center mb-12">
+                <span class="text-white font-semibold">DESCUBRA A GASTRONOMIA</span>
+                <h2 class="font-heading text-3xl md:text-4xl font-bold text-white mt-2 mb-6 scroll-reveal">
+                    Brunch Vagafogo
+                </h2>
+                <p class="text-gray-200 text-lg scroll-reveal">
+                    Um maravilhoso festival gastronômico com derivados do leite produzido na fazenda e frutas do cerrado cultivadas no local, proveniente de manejo sustentável.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="menu-card bg-white bg-opacity-90 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm scroll-reveal">
+                    <div class="relative h-64">
+                        <!-- Laticínios Carousel -->
+                        <div class="carousel relative h-full w-full" data-carousel="laticinios">
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/laticinios/brunch-1.jpg"></div>
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/laticinios/brunch-2.jpg"></div>
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/laticinios/brunch-3.jpg"></div>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" data-slide="0"></div>
+                                <div class="carousel-dot" data-slide="1"></div>
+                                <div class="carousel-dot" data-slide="2"></div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                            <h3 class="font-heading text-xl font-bold text-white">Laticínios Artesanais</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-card bg-white bg-opacity-90 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm scroll-reveal">
+                    <div class="relative h-64">
+                        <!-- Frutas Carousel -->
+                        <div class="carousel relative h-full w-full" data-carousel="frutas">
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/frutas/brunch-1.jpg"></div>
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/frutas/brunch-2.jpg"></div>
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/frutas/brunch-3.jpg"></div>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" data-slide="0"></div>
+                                <div class="carousel-dot" data-slide="1"></div>
+                                <div class="carousel-dot" data-slide="2"></div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                            <h3 class="font-heading text-xl font-bold text-white">Frutas do Cerrado</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-card bg-white bg-opacity-90 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm scroll-reveal">
+                    <div class="relative h-64">
+                        <!-- Harmonizações Carousel -->
+                        <div class="carousel relative h-full w-full" data-carousel="harmonizacoes">
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/harmonizacoes/brunch-1.jpg"></div>
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/harmonizacoes/brunch-2.jpg"></div>
+                            <div class="carousel-inner lazy-image" data-bg="images/brunch/harmonizacoes/brunch-3.jpg"></div>
+                            <div class="carousel-nav">
+                                <div class="carousel-dot active" data-slide="0"></div>
+                                <div class="carousel-dot" data-slide="1"></div>
+                                <div class="carousel-dot" data-slide="2"></div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                            <h3 class="font-heading text-xl font-bold text-white">Harmonizações Exclusivas</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12 scroll-reveal">
+                <a href="#reservas" class="bg-primary text-white font-medium px-8 py-4 rounded-full hover:bg-secondary transform hover:scale-105 transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fas fa-bookmark mr-2"></i> Reservar Experiência Gastronômica
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trail Section -->
+    <section id="trilha" class="py-16 md:py-24" style="background: linear-gradient(rgba(45, 30, 15, 0.7), rgba(45, 30, 15, 0.7)), url('images/hero/hero-3.jpg') center/cover;">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center mb-12">
+                <span class="text-white font-semibold scroll-reveal">CONEXÃO COM A NATUREZA</span>
+                <h2 class="font-heading text-3xl md:text-4xl font-bold text-white mt-2 scroll-reveal">
+                    Trilha Ecológica
+                </h2>
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center gap-4 sm:gap-8 lg:gap-12 max-w-5xl mx-auto mobile-px">
+                <div class="lg:w-1/2 mb-6 lg:mb-0 scroll-reveal">
+                    <div class="menu-card bg-white bg-opacity-90 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm">
+                        <div class="relative h-96">
+                            <!-- Trilha Carousel -->
+                            <div class="carousel relative h-full w-full rounded-2xl shadow-2xl overflow-hidden" data-carousel="trilha">
+                                <div class="carousel-inner lazy-image" data-bg="images/trilhaecologica/trilhaecologica-1.jpg"></div>
+                                <div class="carousel-inner lazy-image" data-bg="images/trilhaecologica/trilhaecologica-2.jpg"></div>
+                                <div class="carousel-inner lazy-image" data-bg="images/trilhaecologica/trilhaecologica-3.jpg"></div>
+                                <div class="carousel-nav">
+                                    <div class="carousel-dot active" data-slide="0"></div>
+                                    <div class="carousel-dot" data-slide="1"></div>
+                                    <div class="carousel-dot" data-slide="2"></div>
+                                </div>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                <h3 class="font-heading text-xl font-bold text-white">Trilha Mãe da Floresta</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 text-white scroll-reveal">
+                    <h3 class="font-heading text-2xl font-bold mb-4">Caminhada Imersiva de 1500m</h3>
+                    <p class="mb-6 text-gray-200">
+                        Nossa trilha ecológica atravessa uma belíssima mata ciliar primária preservada. A trilha é completamente protegida por madeiramento, oferecendo conforto e segurança ao visitante.
+                    </p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span>Espaços estratégicos para descanso e meditação</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span>Corrimões para segurança em áreas mais íngremes</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span>Placas informativas sobre flora e fauna do cerrado</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span>Guias especializados em biodiversidade do cerrado</span>
+                        </li>
+                    </ul>
+                    <a href="#reservas" class="bg-white text-primary font-medium px-8 py-3 rounded-full hover:bg-gray-100 transform hover:scale-105 transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-white">
+                        <i class="fas fa-hiking mr-2"></i> Agendar Trilha
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Educação Ambiental Section -->
+    <section id="educacao" class="py-16 bg-secondary bg-opacity-10">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <span class="text-secondary font-semibold scroll-reveal">APRENDIZADO E INTEGRAÇÃO</span>
+                <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mt-2 scroll-reveal">
+                    Educação Ambiental
+                </h2>
+                <p class="max-w-2xl mx-auto text-gray-700 mt-4 scroll-reveal">
+                    Demonstramos a relação de interdependência do ser humano com a natureza, promovendo proteção e preservação ambiental.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center gap-12 max-w-5xl mx-auto">
+                <div class="lg:w-1/2 scroll-reveal">
+                    <img src="images/educacaoambiental/educacaoambiental-1.jpg" alt="Educação Ambiental" class="w-full h-64 object-cover rounded-xl lazy-load" loading="lazy">
+                </div>
+
+                <div class="lg:w-1/2 scroll-reveal">
+                    <h3 class="font-heading text-2xl font-bold text-primary mb-4">Projeto para Escolas e Grupos</h3>
+                    <p class="mb-6 text-gray-700">
+                        Atividade realizada nas trilhas promovendo interpretação sobre flora, fauna, recursos naturais e sustentabilidade.
+                    </p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span class="text-gray-700">Para escolas, faculdades e grupos específicos</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span class="text-gray-700">Mostra a importância da proteção ambiental local e global</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-accent text-xl mr-3 mt-1"></i>
+                            <span class="text-gray-700">Atividade principal realizada nas trilhas</span>
+                        </li>
+                    </ul>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-8 scroll-reveal">
+                        <p class="text-yellow-700 flex items-start">
+                            <i class="fas fa-info-circle text-yellow-500 mt-1 mr-2"></i>
+                            <span>Esta atividade requer agendamento prévio via WhatsApp</span>
+                        </p>
+                    </div>
+                    <div class="text-center mt-8 mb-4 scroll-reveal">
+                        <a href="#reservas" class="inline-block bg-primary text-white font-medium px-8 py-3 rounded-full hover:bg-secondary transform hover:scale-105 transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            <i class="fab fa-whatsapp mr-2"></i> Agendar por WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Section -->
+    <section id="reservas" class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center mb-12">
+                <span class="text-secondary font-semibold scroll-reveal">RESERVE SEU PASSEIO</span>
+                <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mt-2 scroll-reveal">
+                    Faça sua Reserva Agora
+                </h2>
+                <p class="mt-4 text-gray-700 scroll-reveal">
+                    Garanta sua experiência única no Santuário Vagafogo. Escolha abaixo o pacote desejado e preencha o formulário.
+                </p>
+            </div>
+
+            <div class="max-w-5xl mx-auto">
+                <!-- Booking Steps -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <div class="booking-step bg-white p-6 rounded-xl shadow-md border border-gray-100 text-center scroll-reveal">
+                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white mx-auto mb-4">
+                            1
+                        </div>
+                        <h3 class="font-bold text-primary text-xl mb-2">Escolha seu Passeio</h3>
+                        <p class="text-gray-600">Selecione entre nossas experiências gastronômicas e ecológicas</p>
+                    </div>
+
+                    <div class="booking-step bg-white p-6 rounded-xl shadow-md border border-gray-100 text-center scroll-reveal">
+                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white mx-auto mb-4">
+                            2
+                        </div>
+                        <h3 class="font-bold text-primary text-xl mb-2">Preencha os Dados</h3>
+                        <p class="text-gray-600">Informe seus dados pessoais e preferências de data</p>
+                    </div>
+
+                    <div class="booking-step bg-white p-6 rounded-xl shadow-md border border-gray-100 text-center scroll-reveal">
+                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white mx-auto mb-4">
+                            3
+                        </div>
+                        <h3 class="font-bold text-primary text-xl mb-2">Confirme sua Reserva</h3>
+                        <p class="text-gray-600">Receba a confirmação e prepare-se para a experiência</p>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 scroll-reveal">
+                    <form id="booking-form" class="space-y-6">
+                        <!-- Package Selection -->
+                        <div>
+                            <label class="block text-lg font-semibold text-primary mb-4">Escolha seu Pacote:</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="tab-button" data-package="brunch">
+                                    <div class="text-center">
+                                        <i class="fas fa-utensils text-2xl mb-2"></i>
+                                        <h4 class="font-bold">Brunch Gastronômico</h4>
+                                        <p class="text-sm">R$ 105,00</p>
+                                    </div>
+                                </div>
+                                <div class="tab-button" data-package="trilha">
+                                    <div class="text-center">
+                                        <i class="fas fa-hiking text-2xl mb-2"></i>
+                                        <h4 class="font-bold">Trilha Ecológica</h4>
+                                        <p class="text-sm">R$ 30,00</p>
+                                    </div>
+                                </div>
+                                <div class="tab-button" data-package="combo">
+                                    <div class="text-center">
+                                        <i class="fas fa-star text-2xl mb-2"></i>
+                                        <h4 class="font-bold">Experiência Completa</h4>
+                                        <p class="text-sm">R$ 125,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
+                                <input type="text" id="nome" name="nome" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail *</label>
+                                <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="telefone" class="block text-sm font-medium text-gray-700 mb-2">Telefone/WhatsApp *</label>
+                                <input type="tel" id="telefone" name="telefone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="pessoas" class="block text-sm font-medium text-gray-700 mb-2">Número de Pessoas *</label>
+                                <select id="pessoas" name="pessoas" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent">
+                                    <option value="">Selecione</option>
+                                    <option value="1">1 pessoa</option>
+                                    <option value="2">2 pessoas</option>
+                                    <option value="3">3 pessoas</option>
+                                    <option value="4">4 pessoas</option>
+                                    <option value="5">5 pessoas</option>
+                                    <option value="6+">6 ou mais pessoas</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Date Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data Preferida *</label>
+                            <div class="grid grid-cols-7 gap-2 mb-4" id="calendar">
+                                <!-- Calendar will be generated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div>
+                            <label for="observacoes" class="block text-sm font-medium text-gray-700 mb-2">Observações Especiais</label>
+                            <textarea id="observacoes" name="observacoes" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent" placeholder="Restrições alimentares, necessidades especiais, etc."></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="bg-primary text-white font-medium px-12 py-4 rounded-full hover:bg-secondary transform hover:scale-105 transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fas fa-paper-plane mr-2"></i> Enviar Reserva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <img src="images/logo/logo.jpg" alt="Logo Vagafogo" class="w-12 h-9 rounded-lg object-cover lazy-load" loading="lazy">
+                        <span class="ml-3 font-heading font-bold text-xl">VAGAFOGO</span>
+                    </div>
+                    <p class="text-gray-300 mb-4">
+                        Experiências gastronômicas e aventuras ecológicas no coração do cerrado brasileiro.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-accent transition">
+                            <i class="fab fa-facebook-f text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-accent transition">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-accent transition">
+                            <i class="fab fa-whatsapp text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-heading text-xl font-bold mb-4">Contato</h3>
+                    <div class="space-y-3">
+                        <p class="flex items-center text-gray-300">
+                            <i class="fas fa-map-marker-alt mr-3 text-accent"></i>
+                            Estrada Rural, Km 15 - Cerrado, Brasil
+                        </p>
+                        <p class="flex items-center text-gray-300">
+                            <i class="fas fa-phone mr-3 text-accent"></i>
+                            (11) 99999-9999
+                        </p>
+                        <p class="flex items-center text-gray-300">
+                            <i class="fas fa-envelope mr-3 text-accent"></i>
+                            contato@vagafogo.com.br
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-heading text-xl font-bold mb-4">Horários</h3>
+                    <div class="space-y-2 text-gray-300">
+                        <p><strong>Brunch:</strong> Sáb e Dom - 9h às 15h</p>
+                        <p><strong>Trilha:</strong> Todos os dias - 8h às 17h</p>
+                        <p><strong>Educação Ambiental:</strong> Agendamento prévio</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2024 Vagafogo. Todos os direitos reservados.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Otimizações de performance para JavaScript
+        
+        // Intersection Observer para scroll reveal (mais eficiente que scroll events)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                    observer.unobserve(entry.target); // Para de observar após mostrar
+                }
+            });
+        }, observerOptions);
+
+        // Observar todos os elementos scroll-reveal
+        document.addEventListener('DOMContentLoaded', () => {
+            const scrollElements = document.querySelectorAll('.scroll-reveal');
+            scrollElements.forEach(el => observer.observe(el));
+        });
+
+        // Lazy loading otimizado para imagens de background
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const bgUrl = img.dataset.bg;
+                    if (bgUrl) {
+                        // Preload da imagem
+                        const imageLoader = new Image();
+                        imageLoader.onload = () => {
+                            img.style.backgroundImage = `url(${bgUrl})`;
+                            img.classList.remove('lazy-image');
+                        };
+                        imageLoader.src = bgUrl;
+                    }
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+
+        // Observar elementos com lazy loading
+        document.addEventListener('DOMContentLoaded', () => {
+            const lazyImages = document.querySelectorAll('.lazy-image[data-bg]');
+            lazyImages.forEach(img => imageObserver.observe(img));
+        });
+
+        // Carousel otimizado com requestAnimationFrame
+        class OptimizedCarousel {
+            constructor(element) {
+                this.carousel = element;
+                this.slides = element.querySelectorAll('.carousel-inner');
+                this.dots = element.querySelectorAll('.carousel-dot');
+                this.currentSlide = 0;
+                this.isAnimating = false;
+                
+                this.init();
+            }
+
+            init() {
+                // Mostrar primeiro slide
+                if (this.slides.length > 0) {
+                    this.slides[0].classList.add('active');
+                }
+
+                // Event listeners para dots
+                this.dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                });
+
+                // Auto-play otimizado
+                this.startAutoPlay();
+            }
+
+            goToSlide(index) {
+                if (this.isAnimating || index === this.currentSlide) return;
+                
+                this.isAnimating = true;
+                
+                // Usar requestAnimationFrame para animações suaves
+                requestAnimationFrame(() => {
+                    // Remover active do slide atual
+                    this.slides[this.currentSlide].classList.remove('active');
+                    this.dots[this.currentSlide].classList.remove('active');
+                    
+                    // Adicionar active ao novo slide
+                    this.slides[index].classList.add('active');
+                    this.dots[index].classList.add('active');
+                    
+                    this.currentSlide = index;
+                    
+                    // Reset animation flag após transição
+                    setTimeout(() => {
+                        this.isAnimating = false;
+                    }, 800);
+                });
+            }
+
+            nextSlide() {
+                const nextIndex = (this.currentSlide + 1) % this.slides.length;
+                this.goToSlide(nextIndex);
+            }
+
+            startAutoPlay() {
+                setInterval(() => {
+                    if (!this.isAnimating) {
+                        this.nextSlide();
+                    }
+                }, 4000);
+            }
+        }
+
+        // Inicializar carousels quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            const carousels = document.querySelectorAll('.carousel');
+            carousels.forEach(carousel => new OptimizedCarousel(carousel));
+        });
+
+        // Menu mobile otimizado
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (menuToggle && mobileMenu) {
+                menuToggle.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+
+                // Fechar menu ao clicar em links
+                const menuLinks = mobileMenu.querySelectorAll('a');
+                menuLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.add('hidden');
+                    });
+                });
+            }
+        });
+
+        // Smooth scroll otimizado
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('a[href^="#"]');
+            
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+
+        // Formulário de reserva otimizado
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('booking-form');
+            const packageButtons = document.querySelectorAll('.tab-button[data-package]');
+            let selectedPackage = '';
+
+            // Seleção de pacote
+            packageButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    packageButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    selectedPackage = button.dataset.package;
+                });
+            });
+
+            // Geração de calendário simples
+            const generateCalendar = () => {
+                const calendar = document.getElementById('calendar');
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                
+                // Limpar calendário
+                calendar.innerHTML = '';
+                
+                // Dias da semana
+                const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                daysOfWeek.forEach(day => {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'text-center font-semibold text-gray-600 py-2';
+                    dayElement.textContent = day;
+                    calendar.appendChild(dayElement);
+                });
+                
+                // Dias do mês (próximos 14 dias)
+                for (let i = 0; i < 14; i++) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() + i);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'text-center py-2 cursor-pointer border rounded hover:bg-primary hover:text-white transition';
+                    dayElement.textContent = date.getDate();
+                    dayElement.dataset.date = date.toISOString().split('T')[0];
+                    
+                    dayElement.addEventListener('click', () => {
+                        document.querySelectorAll('#calendar div[data-date]').forEach(el => {
+                            el.classList.remove('day-selected');
+                        });
+                        dayElement.classList.add('day-selected');
+                    });
+                    
+                    calendar.appendChild(dayElement);
+                }
+            };
+
+            generateCalendar();
+
+            // Submissão do formulário
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    
+                    // Validação básica
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let isValid = true;
+                    
+                    requiredFields.forEach(field => {
+                        if (!field.value.trim()) {
+                            field.classList.add('form-error');
+                            isValid = false;
+                        } else {
+                            field.classList.remove('form-error');
+                        }
+                    });
+                    
+                    if (!selectedPackage) {
+                        alert('Por favor, selecione um pacote.');
+                        isValid = false;
+                    }
+                    
+                    const selectedDate = document.querySelector('.day-selected');
+                    if (!selectedDate) {
+                        alert('Por favor, selecione uma data.');
+                        isValid = false;
+                    }
+                    
+                    if (isValid) {
+                        // Simular envio
+                        alert('Reserva enviada com sucesso! Entraremos em contato em breve.');
+                        form.reset();
+                        packageButtons.forEach(btn => btn.classList.remove('active'));
+                        generateCalendar();
+                    }
+                });
+            }
+        });
+
+        // Performance monitoring (opcional)
+        if ('performance' in window) {
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    console.log('Page load time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+                }, 0);
+            });
+        }
+    </script>
+</body>
+</html>
+

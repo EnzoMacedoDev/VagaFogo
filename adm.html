@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Agenda Vagafogo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#2563eb',
+                        'secondary': '#0ea5e9',
+                        'success': '#10b981',
+                        'warning': '#f59e0b',
+                        'danger': '#ef4444',
+                        'dark': '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .dia-aberto {
+            background-color: #4ade80;
+        }
+        .dia-fechado {
+            background-color: #f87171;
+        }
+        .agenda-day {
+            position: relative;
+            padding: 8px;
+            height: 100%;
+            min-height: 100px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .agenda-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .today-date {
+            box-shadow: 0 0 0 3px #4f46e5;
+            border: 2px solid #2563eb;
+        }
+        .selected-date {
+            box-shadow: 0 0 0 3px #000000;
+            border: 2px solid #000000;
+        }
+        .day-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .day-action-btn {
+            font-size: 0.65rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .expanded-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 50;
+            background: white;
+            padding: 2rem;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(20px); }
+        }
+
+        .expanded-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .dot-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #4f46e5;
+        }
+        .booking-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .tag-trillha {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .tag-brunch {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .tag-educacao {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .closing {
+            animation: fadeOut 0.3s ease forwards;
+        }
+        @media (max-width: 1024px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, minmax(0, 1fr));
+                gap: 2px;
+            }
+            .agenda-day {
+                min-height: 70px;
+                padding: 4px;
+            }
+            .dot-indicator {
+                width: 4px;
+                height: 4px;
+                bottom: 4px;
+            }
+            .expanded-view {
+                padding: 1rem;
+            }
+        }
+        .print-header {
+            display: none;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .expanded-view, .expanded-view * {
+                visibility: visible;
+            }
+            .expanded-view {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .expanded-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            .expanded-header > div {
+                margin-top: 1rem;
+            }
+            .print-header {
+                display: block;
+                text-align: center;
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid #333;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-800 text-white hidden md:block fixed h-screen">
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex justify-center">
+                    <img src="images/logo/logo.jpg" alt="Logo" class="w-16 h-16 rounded-xl object-cover">
+                </div>
+            </div>
+            <nav class="mt-4">
+                <a href="#" class="block py-3 px-6 bg-gray-900 text-blue-400">
+                    <i class="fas fa-calendar-alt mr-3"></i> Agenda
+                </a>
+            </nav>
+            <div class="absolute bottom-0 w-64 hidden md:block">
+                <div class="p-4 border-t border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                            <span class="text-white font-bold">A</span>
+                        </div>
+                        <div class="ml-3">
+                            <p class="font-medium">Administrador</p>
+                            <p class="text-sm text-gray-400">admin@vagafogo.com</p>
+                        </div>
+                    </div>
+                    <button class="mt-4 w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-x-hidden md:ml-64">
+            <header class="bg-white shadow-sm">
+                <div class="flex justify-between items-center p-4">
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-800">Painel Administrativo</h1>
+                        <p class="text-sm text-gray-500">Gerencie as atividades e reservas da agenda</p>
+                    </div>
+                    <div class="md:hidden">
+                        <button id="mobile-menu" class="p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="p-4 md:p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                    <!-- Cards de estatísticas -->
+                    <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-blue-100 rounded-full mr-4">
+                                <i class="fas fa-calendar-day text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Agendamentos Hoje</p>
+                                <p class="text-2xl font-bold">28</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-yellow-100 rounded-full mr-4">
+                                <i class="fas fa-utensils text-yellow-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Brunch Ativos</p>
+                                <p class="text-2xl font-bold">15</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-green-100 rounded-full mr-4">
+                                <i class="fas fa-hiking text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Trilhas Ativas</p>
+                                <p class="text-2xl font-bold">18</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seletor de período -->
+                <div class="mt-6 bg-white p-4 md:p-6 rounded-lg shadow-sm">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Calendário de Atividades</h2>
+                        <div class="flex flex-col md:flex-row items-start md:items-center space-y-3 md:space-y-0 md:space-x-4">
+                            <div class="flex items-center">
+                                <span class="inline-flex items-center mr-4">
+                                    <span class="inline-block w-d4 h-4 mr-1 dia-aberto rounded-sm"></span>
+                                    <span class="text-sm">Dia Aberto</span>
+                                </span>
+                                <span class="inline-flex items-center">
+                                    <span class="inline-block w-4 h-4 mr-1 dia-fechado rounded-sm"></span>
+                                    <span class="text-sm">Dia Fechado</span>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-center flex-1 space-x-2">
+                                <button id="prev-month-btn" class="px-3 py-1 bg-gray-100 rounded-md hover:bg-gray-200">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="font-medium text-gray-700" id="current-month-year"></span>
+                                <button id="next-month-btn" class="px-3 py-1 bg-gray-100 rounded-md hover:bg-gray-200">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <div class="flex gap-2" id="agenda-buttons-container">
+                                    <button class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm md:text-base" id="open-agenda-btn" data-state="open">
+                                        <i class="fas fa-calendar-plus mr-1"></i> Abrir Agenda
+                                    </button>
+                                    <button class="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-xs" id="edit-agenda-btn">
+                                        <i class="fas fa-edit mr-1"></i> Editar
+                                    </button>
+                                    <button class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-xs" id="close-agenda-btn">
+                                        <i class="fas fa-calendar-times mr-1"></i> Fechar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendário -->
+                    <div class="grid grid-cols-7 gap-1 md:gap-3 mb-3">
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Dom</div>
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Seg</div>
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Ter</div>
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Qua</div>
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Qui</div>
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Sex</div>
+                        <div class="text-center font-semibold text-gray-600 py-2 text-sm md:text-base">Sáb</div>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1 md:gap-3 calendar-grid" id="calendar-grid">
+                        <!-- Dias serão gerados dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Painel de agendamentos para a data selecionada -->
+                <div class="mt-6 bg-white p-4 md:p-6 rounded-lg shadow-sm">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800" id="selected-date-title">Selecione um dia no calendário</h2>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex items-center space-x-2 mr-2">
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                <span class="text-xs">Trilha</span>
+                            </div>
+                            <div class="flex items-center space-x-2 mr-2">
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="text-xs">Brunch</span>
+                            </div>
+                            <div class="flex items-center space-x-2 mr-2">
+                                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                <span class="text-xs">Educação</span>
+                            </div>
+                            <button class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition" id="new-reservation-btn">
+                                <i class="fas fa-plus mr-1"></i> Nova Reserva
+                            </button>
+                            <button id="expand-list-btn" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                                <i class="fas fa-expand mr-1"></i> Ampliar
+                            </button>
+                            <button id="close-expanded" class="hidden px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition ml-2">
+                                <i class="fas fa-times mr-1"></i> Fechar
+                            </button>
+                            <div class="flex gap-2" id="actions-container">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 bg-gray-50 p-3 rounded-md">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Atividade</label>
+                                <select id="activity-filter" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                                    <option value="">Todas as atividades</option>
+                                    <option value="Trilha">Trilha Ecológica</option>
+                                    <option value="Brunch">Brunch no Bosque</option>
+                                    <option value="Educação">Educação Ambiental</option>
+                                    <option value="Combo">Trilha + Brunch</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Horário</label>
+                                <select id="time-start-filter" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                                    <option value="">Qualquer horário</option>
+                                    <option value="08:00">08:00</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="12:00">12:00</option>
+                                    <option value="13:00">13:00</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="16:00">16:00</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Atividade
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Horário
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        CPF
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Telefone
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Participantes
+                                    </th>
+                                    <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Ações
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="bookings-list">
+                                <!-- Bookings will be loaded here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Visualização Expandida dos Agendamentos (inicialmente oculta) -->
+    <div id="expanded-view-container" class="hidden"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Meses em português
+            const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+            // Estado da aplicação
+            let currentDate = new Date();
+            let selectedDate = new Date();
+
+            // Dados de exemplo
+            const bookingsData = {
+                '28 Julho': [
+                    {activity: 'Trilha Ecológica', time: '08:30', cpf: '123.456.789-00', phone: '(21) 98765-4321', participants: 6},
+                    {activity: 'Brunch no Bosque', time: '09:00', cpf: '987.654.321-00', phone: '(21) 99876-5432', participants: 4},
+                    {activity: 'Trilha Ecológica', time: '10:00', cpf: '456.789.123-00', phone: '(21) 98765-1234', participants: 5},
+                    {activity: 'Brunch no Bosque', time: '11:30', cpf: '789.123.456-00', phone: '(21) 91234-5678', participants: 3},
+                    {activity: 'Trilha Ecológica', time: '13:00', cpf: '321.654.987-00', phone: '(21) 94567-8910', participants: 8},
+                    {activity: 'Educação Ambiental', time: '15:00', cpf: 'Instituição', phone: '(21) 2345-6789', participants: 25}
+                ],
+                '30 Julho': [
+                    {activity: 'Trilha Ecológica', time: '08:00', cpf: '555.666.777-88', phone: '(21) 91234-0987', participants: 5},
+                    {activity: 'Brunch no Bosque', time: '10:30', cpf: '888.999.000-11', phone: '(21) 99876-1234', participants: 4},
+                    {activity: 'Trilha Ecológica', time: '13:30', cpf: '222.333.444-55', phone: '(21) 96543-2109', participants: 7}
+                ],
+                '2 Agosto': [
+                    {activity: 'Brunch no Bosque', time: '09:00', cpf: '111.222.333-44', phone: '(21) 98765-6789', participants: 2},
+                    {activity: 'Trilha Ecológica', time: '11:00', cpf: '444.555.666-77', phone: '(21) 91234-4321', participants: 6}
+                ],
+                '10 Junho': [
+                    {activity: 'Trilha Ecológica', time: '08:00', cpf: '159.753.246-80', phone: '(21) 98765-4321', participants: 4},
+                    {activity: 'Brunch no Bosque', time: '10:30', cpf: '357.862.914-50', phone: '(21) 99876-5432', participants: 3},
+                    {activity: 'Educação Ambiental', time: '14:00', cpf: 'Instituição Verde', phone: '(21) 2345-6789', participants: 15},
+                    {activity: 'Trilha + Brunch', time: '16:00', cpf: '684.235.197-30', phone: '(21) 94567-8910', participants: 5}
+                ]
+            };
+
+            // Elementos do DOM
+            const calendarGrid = document.getElementById('calendar-grid');
+            const currentMonthYearEl = document.getElementById('current-month-year');
+            const selectedDateTitle = document.getElementById('selected-date-title');
+            const bookingsList = document.getElementById('bookings-list');
+            const activityFilter = document.getElementById('activity-filter');
+            const timeStartFilter = document.getElementById('time-start-filter');
+            const expandListBtn = document.getElementById('expand-list-btn');
+            const closeExpandedBtn = document.getElementById('close-expanded');
+            const expandedViewContainer = document.getElementById('expanded-view-container');
+
+            // Inicialização
+            renderCalendar();
+            updateBookingsForSelectedDate();
+
+            // Botão Editar Agenda
+            document.getElementById('edit-agenda-btn').addEventListener('click', () => {
+                alert('Editar agenda para esta data: ' + selectedDate.toLocaleDateString('pt-BR'));
+            });
+
+            // Botão Fechar Agenda
+            document.getElementById('close-agenda-btn').addEventListener('click', () => {
+                const dayEl = document.querySelector('.agenda-day.selected-date');
+                if (dayEl) {
+                    dayEl.classList.remove('dia-aberto');
+                    dayEl.classList.add('dia-fechado');
+                    dayEl.dataset.open = 'false';
+
+                    // Esconder botões de edição/fechamento e mostrar o de abertura
+                    document.getElementById('edit-agenda-btn').classList.add('hidden');
+                    document.getElementById('close-agenda-btn').classList.add('hidden');
+                    document.getElementById('open-agenda-btn').classList.remove('hidden');
+
+                    alert('Agenda fechada para esta data');
+                }
+            });
+
+            // Botão Abrir Agenda
+            document.getElementById('open-agenda-btn').addEventListener('click', () => {
+                const dayEl = document.querySelector('.agenda-day.selected-date');
+                if (dayEl) {
+                    dayEl.classList.remove('dia-fechado');
+                    dayEl.classList.add('dia-aberto');
+                    dayEl.dataset.open = 'true';
+
+                    // Esconder botão de abertura e mostrar os de edição/fechamento
+                    document.getElementById('open-agenda-btn').classList.add('hidden');
+                    document.getElementById('edit-agenda-btn').classList.remove('hidden');
+                    document.getElementById('close-agenda-btn').classList.remove('hidden');
+
+                    alert('Agenda aberta para esta data');
+                }
+            });
+
+            // Navegação entre meses
+            document.getElementById('prev-month-btn').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            document.getElementById('next-month-btn').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // Botão para nova reserva
+            document.getElementById('new-reservation-btn').addEventListener('click', () => {
+                // Implemente a lógica para abrir o modal de nova reserva
+                alert('Funcionalidade de nova reserva será implementada aqui');
+            });
+
+            // Filtros
+            activityFilter.addEventListener('change', updateBookingsForSelectedDate);
+            timeStartFilter.addEventListener('click', updateBookingsForSelectedDate);
+
+            // Função para renderizar o calendário
+            function renderCalendar() {
+                calendarGrid.innerHTML = '';
+
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const today = new Date();
+
+                // Atualizar o cabeçalho do mês/ano
+                currentMonthYearEl.textContent = `${months[month]} ${year}`;
+
+                // Primeiro dia do mês
+                const firstDay = new Date(year, month, 1);
+                // Último dia do mês
+                const lastDay = new Date(year, month + 1, 0);
+                // Dia da semana do primeiro dia (0=Domingo, 6=Sábado)
+                const firstDayOfWeek = firstDay.getDay();
+                // Número de dias no mês
+                const daysInMonth = lastDay.getDate();
+
+                // Dias do mês anterior para preencher o início
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
+                // Preencher com dias do mês anterior
+                for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                    const day = prevMonthLastDay - i;
+                    addDayToCalendar(day, true);
+                }
+
+                // Dias do mês atual
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    addDayToCalendar(day, false, date, today);
+                }
+
+                // Não mostraremos os dias do próximo mês
+                const daysSoFar = firstDayOfWeek + daysInMonth;
+                // Preenche apenas com células vazias se necessário para completar a última linha
+                const daysNeeded = (Math.ceil(daysSoFar / 7) * 7) - daysSoFar;
+                for (let i = 0; i < daysNeeded; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'agenda-day bg-transparent';
+                    calendarGrid.appendChild(emptyDay);
+                }
+            }
+
+            // Função para adicionar um dia ao calendário
+            function addDayToCalendar(day, isOtherMonth, date = null, today = new Date()) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'agenda-day text-center';
+
+                if (isOtherMonth) {
+                    dayEl.classList.add('bg-gray-200');
+                    dayEl.innerHTML = `<div class="text-gray-500 text-sm">${day}</div>`;
+                } else {
+                    // Verificar se é hoje
+                    if (date && date.getDate() === today.getDate() &&
+                        date.getMonth() === today.getMonth() &&
+                        date.getFullYear() === today.getFullYear()) {
+                        dayEl.classList.add('today-date');
+                    }
+
+                    // Verificar se é o dia selecionado
+                    if (date && date.getDate() === selectedDate.getDate() &&
+                        date.getMonth() === selectedDate.getMonth() &&
+                        date.getFullYear() === selectedDate.getFullYear()) {
+                        dayEl.classList.add('selected-date');
+                    }
+
+                    // Definição se o dia está aberto ou fechado (dia 10 está sempre aberto)
+                    const isOpen = (day === 10) || Math.random() > 0.3; // Day 10 always open + 70% chance for others
+                    dayEl.dataset.open = isOpen; // Store if day is open
+                    if (isOpen) {
+                        dayEl.classList.add('dia-aberto');
+                    } else {
+                        dayEl.classList.add('dia-fechado');
+                    }
+
+                    // Adicionar indicador se houver reservas neste dia
+                    const monthName = months[date.getMonth()];
+                    const dateKey = `${day} ${monthName}`;
+                    if (bookingsData[dateKey] && bookingsData[dateKey].length > 0) {
+                        dayEl.innerHTML = `<div class="${isOpen ? 'text-white font-medium' : 'text-white font-medium'}">${day}</div><div class="dot-indicator"></div>`;
+                    } else {
+                        dayEl.innerHTML = `<div class="${isOpen ? 'text-white font-medium' : 'text-white font-medium'}">${day}</div>`;
+                    }
+
+                    // Evento de clique
+                    dayEl.addEventListener('click', () => {
+                        // Remover seleção anterior
+                        document.querySelectorAll('.agenda-day.selected-date').forEach(el => {
+                            el.classList.remove('selected-date');
+                        });
+
+                        // Adicionar seleção ao dia clicado
+                        dayEl.classList.add('selected-date');
+
+                        // Atualizar a data selecionada
+                        selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+
+                        // Mostrar container de botões
+                        const buttonsContainer = document.getElementById('agenda-buttons-container');
+                        buttonsContainer.classList.remove('hidden');
+
+                        // Mostrar os botões apropriados baseado no status da agenda
+                        const isOpen = dayEl.dataset.open === 'true';
+                        const openBtn = document.getElementById('open-agenda-btn');
+                        const editBtn = document.getElementById('edit-agenda-btn');
+                        const closeBtn = document.getElementById('close-agenda-btn');
+
+                        openBtn.classList.add('hidden');
+                        editBtn.classList.add('hidden');
+                        closeBtn.classList.add('hidden');
+
+                        if (isOpen) {
+                            editBtn.classList.remove('hidden');
+                            closeBtn.classList.remove('hidden');
+                        } else {
+                            openBtn.classList.remove('hidden');
+                        }
+
+                        // Atualizar os agendamentos
+                        updateBookingsForSelectedDate();
+                    });
+                }
+
+                calendarGrid.appendChild(dayEl);
+            }
+
+            // Função para atualizar os botões da agenda
+            function updateAgendaButtons(isOpen) {
+                const openBtn = document.getElementById('open-agenda-btn');
+                const editBtn = document.getElementById('edit-agenda-btn');
+                const closeBtn = document.getElementById('close-agenda-btn');
+
+                openBtn.classList.add('hidden');
+                editBtn.classList.add('hidden');
+                closeBtn.classList.add('hidden');
+
+                if (isOpen) {
+                    editBtn.classList.remove('hidden');
+                    closeBtn.classList.remove('hidden');
+                } else {
+                    openBtn.classList.remove('hidden');
+                }
+            }
+
+            // Função para atualizar os agendamentos para a data selecionada
+            function updateBookingsForSelectedDate() {
+                const day = selectedDate.getDate();
+                const monthName = months[selectedDate.getMonth()];
+                const dateKey = `${day} ${monthName}`;
+
+                selectedDateTitle.textContent = `Agendamentos para ${day} de ${monthName}`;
+
+                // Limpar a lista de agendamentos
+                bookingsList.innerHTML = '';
+
+                if (bookingsData[dateKey]) {
+                    const activityFilterValue = activityFilter.value;
+                    const timeFilterValue = timeStartFilter.value;
+
+                    // Filtrar os agendamentos
+                    const filteredBookings = bookingsData[dateKey].filter(booking => {
+                        // Filtro por atividade
+                        if (activityFilterValue && !booking.activity.includes(activityFilterValue)) {
+                            return false;
+                        }
+
+                        // Filtro por horário
+                        if (timeFilterValue && booking.time !== timeFilterValue) {
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+                    if (filteredBookings.length === 0) {
+                        bookingsList.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                                    Nenhum agendamento encontrado para os filtros selecionados
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        filteredBookings.forEach(booking => {
+                            const row = document.createElement('tr');
+
+                            // Determinar a classe da tag com base na atividade
+                            let tagClass = '';
+                            if (booking.activity.includes('Trilha')) {
+                                tagClass = 'tag-trillha';
+                            } else if (booking.activity.includes('Brunch')) {
+                                tagClass = 'tag-brunch';
+                            } else if (booking.activity.includes('Educação')) {
+                                tagClass = 'tag-educacao';
+                            }
+
+                            row.innerHTML = `
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full ${booking.activity.includes('Trilha') ? 'bg-green-500' :
+                                            booking.activity.includes('Brunch') ? 'bg-yellow-500' : 'bg-blue-500'} mr-2"></div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            ${booking.activity}
+                                            <span class="booking-tag ${tagClass} ml-2">${booking.participants} pessoas</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${booking.time}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${booking.cpf}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${booking.phone}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${booking.participants}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit mr-1"></i> Editar</button>
+                                    <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash mr-1"></i> Excluir</button>
+                                </td>
+                            `;
+                            bookingsList.appendChild(row);
+                        });
+                    }
+                } else {
+                    bookingsList.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                                Nenhum agendamento para este dia
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Função para expandir a lista de agendamentos
+            expandListBtn.addEventListener('click', function() {
+                const day = selectedDate.getDate();
+                const monthName = months[selectedDate.getMonth()];
+                const dateKey = `${day} ${monthName}`;
+
+                if (bookingsData[dateKey] && bookingsData[dateKey].length > 0) {
+                    expandBookingsList(day, monthName);
+                } else {
+                    alert('Não há agendamentos para expandir neste dia.');
+                }
+            });
+
+            // Função para expandir a lista de agendamentos
+            function expandBookingsList(day, monthName) {
+                const dateKey = `${day} ${monthName}`;
+
+                // Criar a visualização expandida
+                const expandedView = document.createElement('div');
+                expandedView.className = 'expanded-view';
+                expandedView.innerHTML = `
+                    <div class="expanded-header">
+                        <h3 class="text-xl font-semibold">Agendamentos para ${day} de ${monthName}</h3>
+                        <div class="flex items-center gap-2">
+                            <button id="print-expanded-view" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                <i class="fas fa-print mr-2"></i> Imprimir
+                            </button>
+                            <button id="close-expanded-view" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                                <i class="fas fa-times mr-2"></i> Fechar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="print-header">
+                        <h2 class="text-2xl font-bold">Vagafogo - Agenda de Atividades</h2>
+                        <p class="text-gray-600">Data: ${day} de ${monthName} de ${selectedDate.getFullYear()}</p>
+                        <p class="text-gray-600 text-sm">Emitido em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
+                    </div>
+                    <div class="mb-4 bg-gray-50 p-4 rounded-md">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Atividade</label>
+                                <select class="expanded-activity-filter w-full p-2 border border-gray-300 rounded-md text-sm">
+                                    <option value="">Todas as atividades</option>
+                                    <option value="Trilha">Trilha</option>
+                                    <option value="Brunch">Brunch</option>
+                                    <option value="Educação">Educação</option>
+                                    <option value="Combo">Combo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Horário</label>
+                                <select class="expanded-time-filter w-full p-2 border border-gray-300 rounded-md text-sm">
+                                    <option value="">Qualquer horário</option>
+                                    <option value="08:00">08:00</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="12:00">12:00</option>
+                                    <option value="13:00">13:00</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="16:00">16:00</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto bg-white p-4 rounded-lg shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Atividade
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Horário
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        CPF
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Telefone
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Participantes
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200 expanded-bookings-list">
+                                ${generateBookingsHtml(day, monthName)}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-6 text-center text-sm text-gray-500">
+                        <p>Total de agendamentos: ${bookingsData[dateKey].length}</p>
+                        <p>Total de participantes: ${calculateTotalParticipants(bookingsData[dateKey])}</p>
+                    </div>
+                `;
+
+                // Adicionar ao container
+                expandedViewContainer.innerHTML = '';
+                expandedViewContainer.appendChild(expandedView);
+
+                // Mostrar a visualização expandida
+                expandedViewContainer.classList.remove('hidden');
+                expandListBtn.classList.add('hidden');
+                closeExpandedBtn.classList.remove('hidden');
+
+                // Adicionar eventos aos filtros
+                document.querySelector('.expanded-activity-filter').addEventListener('change', function() {
+                    filterExpandedBookings(day, monthName);
+                });
+
+                document.querySelector('.expanded-time-filter').addEventListener('change', function() {
+                    filterExpandedBookings(day, monthName);
+                });
+
+                // Adicionar evento para fechar
+                document.getElementById('close-expanded-view').addEventListener('click', closeExpandedView);
+
+                // Adicionar evento para imprimir
+                document.getElementById('print-expanded-view').addEventListener('click', function() {
+                    window.print();
+                });
+
+                // Adicionar evento para esc tecla ESC
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeExpandedView();
+                    }
+                });
+            }
+
+            // Função para fechar a visualização expandida
+            function closeExpandedView() {
+                const expandedView = document.querySelector('.expanded-view');
+                if (expandedView) {
+                    expandedView.classList.add('closing');
+                    setTimeout(() => {
+                        expandedViewContainer.classList.add('hidden');
+                        expandListBtn.classList.remove('hidden');
+                        closeExpandedBtn.classList.add('hidden');
+                    }, 300);
+                }
+
+                // Remover listener do teclado
+                document.removeEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeExpandedView();
+                    }
+                });
+            }
+
+            // Evento para fechar a visualização expandida
+            closeExpandedBtn.addEventListener('click', closeExpandedView);
+
+            // Função para gerar HTML dos agendamentos
+            function generateBookingsHtml(day, monthName) {
+                const dateKey = `${day} ${monthName}`;
+                let html = '';
+
+                if (bookingsData[dateKey]) {
+                    bookingsData[dateKey].forEach(booking => {
+                        let tagClass = '';
+                        if (booking.activity.includes('Trilha')) {
+                            tagClass = 'tag-trillha';
+                        } else if (booking.activity.includes('Brunch')) {
+                            tagClass = 'tag-brunch';
+                        } else if (booking.activity.includes('Educação')) {
+                            tagClass = 'tag-educacao';
+                        }
+
+                        html += `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full ${booking.activity.includes('Trilha') ? 'bg-green-500' :
+                                            booking.activity.includes('Brunch') ? 'bg-yellow-500' : 'bg-blue-500'} mr-2"></div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            ${booking.activity}
+                                            <span class="booking-tag ${tagClass} ml-2">${booking.participants} pessoas</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.time}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.cpf}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.phone}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.participants}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                return html || `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                            Nenhum agendamento para este dia
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Função para filtrar agendamentos na visualização expandida
+            function filterExpandedBookings(day, monthName) {
+                const dateKey = `${day} ${monthName}`;
+                const activityFilter = document.querySelector('.expanded-activity-filter').value;
+                const timeFilter = document.querySelector('.expanded-time-filter').value;
+                const bookingsList = document.querySelector('.expanded-bookings-list');
+
+                let html = '';
+
+                if (bookingsData[dateKey]) {
+                    const filteredBookings = bookingsData[dateKey].filter(booking => {
+                        // Filtro por atividade
+                        if (activityFilter && !booking.activity.includes(activityFilter)) {
+                            return false;
+                        }
+
+                        // Filtro por horário
+                        if (timeFilter && booking.time !== timeFilter) {
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+                    if (filteredBookings.length > 0) {
+                        filteredBookings.forEach(booking => {
+                            let tagClass = '';
+                            if (booking.activity.includes('Trilha')) {
+                                tagClass = 'tag-trillha';
+                            } else if (booking.activity.includes('Brunch')) {
+                                tagClass = 'tag-brunch';
+                            } else if (booking.activity.includes('Educação')) {
+                                tagClass = 'tag-educacao';
+                            }
+
+                            html += `
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-3 h-3 rounded-full ${booking.activity.includes('Trilha') ? 'bg-green-500' :
+                                                booking.activity.includes('Brunch') ? 'bg-yellow-500' : 'bg-blue-500'} mr-2"></div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                ${booking.activity}
+                                                <span class="booking-tag ${tagClass} ml-2">${booking.participants} pessoas</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.time}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.cpf}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.phone}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${booking.participants}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        html = `
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    Nenhum agendamento encontrado para os filtros selecionados
+                                </td>
+                            </tr>
+                        `;
+                    }
+                } else {
+                    html = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                Nenhum agendamento para este dia
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                bookingsList.innerHTML = html;
+            }
+
+            // Função para calcular o total de participantes
+            function calculateTotalParticipants(bookings) {
+                return bookings.reduce((total, booking) => total + booking.participants, 0);
+            }
+        });
+    </script>
+</body>
+</html>
